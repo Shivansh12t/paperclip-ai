@@ -168,8 +168,13 @@ async function ensureEmbeddedPostgresConnection(
         clearPartialClusterDir();
         try {
           await instance.initialise();
-        } catch {
-          // Preserve the original failure context below.
+          return;
+        } catch (retryError) {
+          throw formatEmbeddedPostgresError(retryError, {
+            fallbackMessage:
+              `Failed to initialize embedded PostgreSQL cluster in ${dataDir} on port ${selectedPort}`,
+            recentLogs: logBuffer.getRecentLogs(),
+          });
         }
       }
       throw formatEmbeddedPostgresError(error, {
@@ -200,10 +205,10 @@ async function ensureEmbeddedPostgresConnection(
         });
       }
     } else {
-    throw formatEmbeddedPostgresError(error, {
-      fallbackMessage: `Failed to start embedded PostgreSQL on port ${selectedPort}`,
-      recentLogs: logBuffer.getRecentLogs(),
-    });
+      throw formatEmbeddedPostgresError(error, {
+        fallbackMessage: `Failed to start embedded PostgreSQL on port ${selectedPort}`,
+        recentLogs: logBuffer.getRecentLogs(),
+      });
     }
   }
 
