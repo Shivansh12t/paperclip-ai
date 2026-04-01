@@ -168,7 +168,6 @@ async function ensureEmbeddedPostgresConnection(
         clearPartialClusterDir();
         try {
           await instance.initialise();
-          return;
         } catch (retryError) {
           throw formatEmbeddedPostgresError(retryError, {
             fallbackMessage:
@@ -176,12 +175,13 @@ async function ensureEmbeddedPostgresConnection(
             recentLogs: logBuffer.getRecentLogs(),
           });
         }
+      } else {
+        throw formatEmbeddedPostgresError(error, {
+          fallbackMessage:
+            `Failed to initialize embedded PostgreSQL cluster in ${dataDir} on port ${selectedPort}`,
+          recentLogs: logBuffer.getRecentLogs(),
+        });
       }
-      throw formatEmbeddedPostgresError(error, {
-        fallbackMessage:
-          `Failed to initialize embedded PostgreSQL cluster in ${dataDir} on port ${selectedPort}`,
-        recentLogs: logBuffer.getRecentLogs(),
-      });
     }
   }
   if (existsSync(postmasterPidFile)) {
